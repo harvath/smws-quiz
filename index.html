@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMWS Code Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bottle: #0f2a22;
+    --bottle-deep: #081a15;
+    --bottle-light: #1b4035;
+    --paper: #f3ead7;
+    --paper-dark: #e6d9bd;
+    --ink: #1c1a16;
+    --ink-soft: #5a5347;
+    --amber: #c8872b;
+    --amber-deep: #8f5a14;
+    --ok: #2f7a4f;
+    --ng: #b23a2a;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh;
+    font-family: var(--serif);
+    color: var(--paper);
+    background:
+      radial-gradient(1200px 600px at 20% -10%, var(--bottle-light), transparent 60%),
+      radial-gradient(900px 500px at 110% 110%, #163a2f, transparent 60%),
+      linear-gradient(180deg, var(--bottle), var(--bottle-deep));
+    background-attachment: fixed;
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: .07;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 40px 16px 80px; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+  .brand { display: flex; align-items: baseline; gap: 14px; }
+  .brand .cask {
+    font-family: var(--mono); font-weight: 600; font-size: 13px; letter-spacing: .25em;
+    color: var(--amber); border: 1px solid var(--amber); padding: 4px 8px; border-radius: 2px;
+  }
+  h1 {
+    margin: 0; font-weight: 300; font-size: clamp(30px, 5vw, 46px); letter-spacing: -.01em; line-height: 1;
+    font-variation-settings: "opsz" 144;
+  }
+  h1 em { font-style: italic; font-weight: 500; color: var(--amber); }
+  .stats { font-family: var(--mono); font-size: 12px; color: #a9b8ae; letter-spacing: .04em; }
+
+  .panel {
+    display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center;
+    padding: 14px 18px; border: 1px solid rgba(243,234,215,.18); border-radius: 6px;
+    background: rgba(0,0,0,.18); margin-bottom: 26px;
+  }
+  .panel label { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; user-select: none; }
+  .panel .grp { display: inline-flex; gap: 2px; border: 1px solid rgba(243,234,215,.25); border-radius: 4px; padding: 2px; }
+  .panel .grp label { padding: 4px 10px; border-radius: 3px; font-size: 14px; }
+  .panel .grp input { display: none; }
+  .panel .grp input:checked + span { background: var(--paper); color: var(--ink); }
+  .panel .grp span { padding: 3px 8px; border-radius: 3px; }
+  .switch { position: relative; width: 40px; height: 22px; flex: none; }
+  .switch input { display: none; }
+  .switch i {
+    position: absolute; inset: 0; border-radius: 11px; background: rgba(243,234,215,.2); transition: .2s;
+  }
+  .switch i::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--paper); transition: .2s;
+  }
+  .switch input:checked + i { background: var(--amber); }
+  .switch input:checked + i::after { transform: translateX(18px); }
+  .panel .spacer { flex: 1; }
+  .panel [hidden] { display: none !important; }
+  .panel .from {
+    width: 64px; font-family: var(--mono); font-size: 14px; padding: 4px 6px; border-radius: 3px;
+    border: 1px solid rgba(243,234,215,.3); background: rgba(0,0,0,.2); color: var(--paper); outline: none;
+  }
+  .panel .from:focus { border-color: var(--amber); }
+  .bar {
+    position: sticky; bottom: 0; z-index: 2; margin-top: 20px; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: rgba(8,26,21,.92); backdrop-filter: blur(6px); border: 1px solid rgba(243,234,215,.18); border-radius: 6px;
+  }
+  .bar .prog { font-family: var(--mono); font-size: 13px; color: #a9b8ae; }
+  .bar .prog b { color: var(--paper); font-weight: 500; }
+  .bar .track { height: 3px; background: rgba(243,234,215,.15); border-radius: 2px; margin-top: 6px; width: 200px; max-width: 40vw; overflow: hidden; }
+  .bar .track i { display: block; height: 100%; background: var(--amber); width: 0; transition: width .2s; }
+  .panel .count { font-family: var(--mono); font-size: 12px; color: #a9b8ae; }
+
+  button {
+    font-family: var(--serif); font-size: 16px; cursor: pointer; border-radius: 4px;
+    padding: 10px 20px; border: 1px solid var(--amber); background: var(--amber); color: var(--ink);
+    font-weight: 600; letter-spacing: .02em; transition: transform .08s, background .15s;
+  }
+  button:hover { background: #d7973a; }
+  button:active { transform: translateY(1px); }
+  button.ghost { background: transparent; color: var(--paper); border-color: rgba(243,234,215,.4); font-weight: 400; }
+  button.ghost:hover { background: rgba(243,234,215,.08); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .card {
+    position: relative; background: var(--paper); color: var(--ink); border-radius: 4px;
+    padding: 18px 18px 16px; box-shadow: 0 10px 30px -14px rgba(0,0,0,.7), inset 0 0 0 1px rgba(28,26,22,.08);
+    animation: rise .45s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .card::before {
+    content: ""; position: absolute; inset: 6px; border: 1px solid rgba(28,26,22,.18); border-radius: 2px; pointer-events: none;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .card .idx { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); letter-spacing: .2em; }
+  .card .prompt { margin: 10px 0 14px; min-height: 64px; display: flex; align-items: center; }
+  .card .prompt.num { font-family: var(--mono); font-size: 56px; font-weight: 600; line-height: 1; letter-spacing: -.03em; }
+  .card .prompt.num small { font-size: 22px; font-weight: 400; color: var(--ink-soft); margin-left: 4px; }
+  .card .prompt.name { font-size: 26px; line-height: 1.1; font-weight: 500; font-variation-settings: "opsz" 60; }
+  .card .ask { font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
+  .card input {
+    width: 100%; font-family: var(--mono); font-size: 18px; padding: 10px 12px;
+    border: none; border-bottom: 2px solid rgba(28,26,22,.35); background: rgba(255,255,255,.35); color: var(--ink);
+    border-radius: 3px 3px 0 0; outline: none; transition: border-color .15s, background .15s;
+  }
+  .card input:focus { border-color: var(--amber-deep); background: rgba(255,255,255,.6); }
+  .card input::placeholder { color: rgba(28,26,22,.35); }
+  .card.ok { outline: 2px solid var(--ok); outline-offset: -2px; }
+  .card.ng { outline: 2px solid var(--ng); outline-offset: -2px; }
+  .card .verdict { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 14px; }
+  .card .verdict .yours { font-family: var(--mono); color: var(--ink-soft); text-decoration: line-through; }
+  .card .verdict .yours.ok { color: var(--ok); text-decoration: none; }
+  .card .answer { font-size: 17px; font-weight: 600; }
+  .card .answer .code { font-family: var(--mono); }
+  .card .meta { font-size: 11px; color: var(--ink-soft); margin-top: 4px; display: flex; gap: 8px; align-items: center; }
+  .stamp {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .15em; color: var(--ng);
+    border: 1px solid var(--ng); padding: 1px 5px; border-radius: 2px; transform: rotate(-3deg); display: inline-block;
+  }
+
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 26px; }
+  .score {
+    display: flex; align-items: baseline; gap: 10px; margin: 30px 0 10px;
+  }
+  .score .big { font-family: var(--mono); font-size: 64px; font-weight: 600; line-height: 1; color: var(--amber); }
+  .score .of { font-size: 20px; color: #a9b8ae; }
+  .score .msg { font-style: italic; font-size: 20px; margin-left: 8px; }
+  .empty { padding: 60px 20px; text-align: center; color: #a9b8ae; font-style: italic; font-size: 18px; }
+  .hint { font-size: 13px; color: #a9b8ae; margin: -14px 0 22px; }
+  .hint code { font-family: var(--mono); color: var(--paper); }
+  .foot { margin-top: 40px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: rgba(169,184,174,.6); }
+  .foot a { color: inherit; text-decoration: underline dotted; }
+  @media (max-width: 480px) {
+    .wrap { padding-top: 24px; }
+    .card .prompt.num { font-size: 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="cask">SMWS</span>
+      <h1>Distillery <em>Codes</em></h1>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="panel">
+    <div class="grp" id="mode">
+      <label><input type="radio" name="mode" value="rand" checked><span>ランダム 10問</span></label>
+      <label><input type="radio" name="mode" value="seq"><span>順番に全部</span></label>
+    </div>
+    <label><span class="switch"><input type="checkbox" id="closed" checked><i></i></span> 閉鎖蒸留所を含める</label>
+    <div class="grp" id="dir">
+      <label><input type="radio" name="dir" value="mix" checked><span>ミックス</span></label>
+      <label><input type="radio" name="dir" value="n2d"><span>番号 → 蒸留所</span></label>
+      <label><input type="radio" name="dir" value="d2n"><span>蒸留所 → 番号</span></label>
+    </div>
+    <label id="fromwrap" hidden>開始番号 <input type="number" id="from" value="1" min="1" class="from"></label>
+    <span class="spacer"></span>
+    <span class="count" id="count"></span>
+    <button id="start">10問 出題</button>
+  </div>
+  <p class="hint">蒸留所名は綴りだけで OK（例: <code>glen scotia</code> / <code>glenscotia</code>、Isle of Jura は <code>jura</code> でも可）。Enter で次へ。</p>
+
+  <div id="main"><div class="empty">出題ボタンを押してスタート</div></div>
+  <footer class="foot">Scotch, Japanese &amp; Taiwanese single malts only · grain, bourbon, rum etc. not included · source: <a href="https://www.whiskysaga.com/smws-codes">whiskysaga.com</a></footer>
+</div>
+
+<script>
+const DATA = [{"c":1,"n":"Glenfarclas","r":"Speyside","closed":false,"a":["Glenfarclas"]},
+{"c":2,"n":"Glenlivet","r":"Speyside","closed":false,"a":["Glenlivet"]},
+{"c":3,"n":"Bowmore","r":"Islay","closed":false,"a":["Bowmore"]},
+{"c":4,"n":"Highland Park","r":"Islands","closed":false,"a":["Highland Park"]},
+{"c":5,"n":"Auchentoshan","r":"Lowland","closed":false,"a":["Auchentoshan"]},
+{"c":6,"n":"Macduff","r":"Highland","closed":false,"a":["Macduff","Glen Deveron"]},
+{"c":7,"n":"Longmorn","r":"Speyside","closed":false,"a":["Longmorn"]},
+{"c":8,"n":"Tamdhu","r":"Speyside","closed":false,"a":["Tamdhu"]},
+{"c":9,"n":"Glen Grant","r":"Speyside","closed":false,"a":["Glen Grant"]},
+{"c":10,"n":"Bunnahabhain","r":"Islay","closed":false,"a":["Bunnahabhain"]},
+{"c":11,"n":"Tomatin","r":"Highland","closed":false,"a":["Tomatin"]},
+{"c":12,"n":"BenRiach","r":"Speyside","closed":false,"a":["BenRiach"]},
+{"c":13,"n":"Dalmore","r":"Highland","closed":false,"a":["Dalmore"]},
+{"c":14,"n":"Talisker","r":"Islands","closed":false,"a":["Talisker"]},
+{"c":15,"n":"Glenfiddich","r":"Speyside","closed":false,"a":["Glenfiddich"]},
+{"c":16,"n":"Glenturret","r":"Highland","closed":false,"a":["Glenturret"]},
+{"c":17,"n":"Scapa","r":"Islands","closed":false,"a":["Scapa"]},
+{"c":18,"n":"Inchgower","r":"Speyside","closed":false,"a":["Inchgower"]},
+{"c":19,"n":"Glen Garioch","r":"Highland","closed":false,"a":["Glen Garioch"]},
+{"c":20,"n":"Inverleven","r":"Lowland","closed":true,"a":["Inverleven"]},
+{"c":21,"n":"Glenglassaugh","r":"Highland","closed":false,"a":["Glenglassaugh"]},
+{"c":22,"n":"Glenkinchie","r":"Lowland","closed":false,"a":["Glenkinchie"]},
+{"c":23,"n":"Bruichladdich","r":"Islay","closed":false,"a":["Bruichladdich"]},
+{"c":24,"n":"Macallan","r":"Speyside","closed":false,"a":["Macallan"]},
+{"c":25,"n":"Rosebank","r":"Lowland","closed":false,"a":["Rosebank"]},
+{"c":26,"n":"Clynelish","r":"Highland","closed":false,"a":["Clynelish"]},
+{"c":27,"n":"Springbank","r":"Campbeltown","closed":false,"a":["Springbank"]},
+{"c":28,"n":"Tullibardine","r":"Highland","closed":false,"a":["Tullibardine"]},
+{"c":29,"n":"Laphroaig","r":"Islay","closed":false,"a":["Laphroaig"]},
+{"c":30,"n":"Glenrothes","r":"Speyside","closed":false,"a":["Glenrothes"]},
+{"c":31,"n":"Isle of Jura","r":"Islands","closed":false,"a":["Isle of Jura","Jura"]},
+{"c":32,"n":"Edradour","r":"Highland","closed":false,"a":["Edradour"]},
+{"c":33,"n":"Ardbeg","r":"Islay","closed":false,"a":["Ardbeg"]},
+{"c":34,"n":"Tamnavulin","r":"Speyside","closed":false,"a":["Tamnavulin"]},
+{"c":35,"n":"Glen Moray","r":"Speyside","closed":false,"a":["Glen Moray"]},
+{"c":36,"n":"Benrinnes","r":"Speyside","closed":false,"a":["Benrinnes"]},
+{"c":37,"n":"Cragganmore","r":"Speyside","closed":false,"a":["Cragganmore"]},
+{"c":38,"n":"Caperdonich","r":"Speyside","closed":true,"a":["Caperdonich"]},
+{"c":39,"n":"Linkwood","r":"Speyside","closed":false,"a":["Linkwood"]},
+{"c":40,"n":"Balvenie","r":"Speyside","closed":false,"a":["Balvenie"]},
+{"c":41,"n":"Dailuaine","r":"Speyside","closed":false,"a":["Dailuaine"]},
+{"c":42,"n":"Tobermory","r":"Islands","closed":false,"a":["Tobermory","Ledaig"]},
+{"c":43,"n":"Port Ellen","r":"Islay","closed":false,"a":["Port Ellen"]},
+{"c":44,"n":"Craigellachie","r":"Speyside","closed":false,"a":["Craigellachie"]},
+{"c":45,"n":"Dallas Dhu","r":"Speyside","closed":true,"a":["Dallas Dhu"]},
+{"c":46,"n":"Glenlossie","r":"Speyside","closed":false,"a":["Glenlossie"]},
+{"c":47,"n":"Benromach","r":"Speyside","closed":false,"a":["Benromach"]},
+{"c":48,"n":"Balmenach","r":"Speyside","closed":false,"a":["Balmenach"]},
+{"c":49,"n":"St. Magdalene","r":"Lowland","closed":true,"a":["St. Magdalene","St Magdalene","Saint Magdalene"]},
+{"c":50,"n":"Bladnoch","r":"Lowland","closed":false,"a":["Bladnoch"]},
+{"c":52,"n":"Old Pulteney","r":"Highland","closed":false,"a":["Old Pulteney","Pulteney"]},
+{"c":53,"n":"Caol Ila","r":"Islay","closed":false,"a":["Caol Ila"]},
+{"c":54,"n":"Aberlour","r":"Speyside","closed":false,"a":["Aberlour"]},
+{"c":55,"n":"Royal Brackla","r":"Highland","closed":false,"a":["Royal Brackla"]},
+{"c":56,"n":"Coleburn","r":"Speyside","closed":true,"a":["Coleburn"]},
+{"c":57,"n":"Glen Mhor","r":"Highland","closed":true,"a":["Glen Mhor"]},
+{"c":58,"n":"Strathisla","r":"Speyside","closed":false,"a":["Strathisla"]},
+{"c":59,"n":"Teaninich","r":"Highland","closed":false,"a":["Teaninich"]},
+{"c":60,"n":"Aberfeldy","r":"Highland","closed":false,"a":["Aberfeldy"]},
+{"c":61,"n":"Brora","r":"Highland","closed":false,"a":["Brora"]},
+{"c":62,"n":"Glenlochy","r":"Highland","closed":true,"a":["Glenlochy"]},
+{"c":63,"n":"Glentauchers","r":"Speyside","closed":false,"a":["Glentauchers"]},
+{"c":64,"n":"Mannochmore","r":"Speyside","closed":false,"a":["Mannochmore"]},
+{"c":65,"n":"Imperial","r":"Speyside","closed":true,"a":["Imperial"]},
+{"c":66,"n":"Ardmore","r":"Highland","closed":false,"a":["Ardmore"]},
+{"c":67,"n":"Banff","r":"Speyside","closed":true,"a":["Banff"]},
+{"c":68,"n":"Blair Athol","r":"Highland","closed":false,"a":["Blair Athol"]},
+{"c":69,"n":"Glen Albyn","r":"Highland","closed":true,"a":["Glen Albyn"]},
+{"c":70,"n":"Balblair","r":"Highland","closed":false,"a":["Balblair"]},
+{"c":71,"n":"Glenburgie","r":"Speyside","closed":false,"a":["Glenburgie"]},
+{"c":72,"n":"Miltonduff","r":"Speyside","closed":false,"a":["Miltonduff"]},
+{"c":73,"n":"Aultmore","r":"Speyside","closed":false,"a":["Aultmore"]},
+{"c":74,"n":"North Port","r":"Highland","closed":true,"a":["North Port"]},
+{"c":75,"n":"Glenury / Glenury Royal","r":"Highland","closed":true,"a":["Glenury / Glenury Royal","Glenury","Glenury Royal"]},
+{"c":76,"n":"Mortlach","r":"Speyside","closed":false,"a":["Mortlach"]},
+{"c":77,"n":"Glen Ord","r":"Highland","closed":false,"a":["Glen Ord"]},
+{"c":78,"n":"Ben Nevis","r":"Highland","closed":false,"a":["Ben Nevis"]},
+{"c":79,"n":"Deanston","r":"Highland","closed":false,"a":["Deanston"]},
+{"c":80,"n":"Glen Spey","r":"Speyside","closed":false,"a":["Glen Spey"]},
+{"c":81,"n":"Glen Keith","r":"Speyside","closed":false,"a":["Glen Keith"]},
+{"c":82,"n":"Glencadam","r":"Highland","closed":false,"a":["Glencadam"]},
+{"c":83,"n":"Convalmore","r":"Speyside","closed":true,"a":["Convalmore"]},
+{"c":84,"n":"Glendullan","r":"Speyside","closed":false,"a":["Glendullan"]},
+{"c":85,"n":"Glen Elgin","r":"Speyside","closed":false,"a":["Glen Elgin"]},
+{"c":86,"n":"Glenesk","r":"Highland","closed":true,"a":["Glenesk"]},
+{"c":87,"n":"Millburn","r":"Highland","closed":true,"a":["Millburn"]},
+{"c":88,"n":"Speyburn","r":"Speyside","closed":false,"a":["Speyburn"]},
+{"c":89,"n":"Tomintoul","r":"Speyside","closed":false,"a":["Tomintoul"]},
+{"c":90,"n":"Pittyvaich","r":"Speyside","closed":true,"a":["Pittyvaich"]},
+{"c":91,"n":"Dufftown","r":"Speyside","closed":false,"a":["Dufftown"]},
+{"c":92,"n":"Lochside","r":"Highland","closed":true,"a":["Lochside"]},
+{"c":93,"n":"Glen Scotia","r":"Campbeltown","closed":false,"a":["Glen Scotia"]},
+{"c":94,"n":"Fettercairn","r":"Highland","closed":false,"a":["Fettercairn"]},
+{"c":95,"n":"Auchroisk","r":"Speyside","closed":false,"a":["Auchroisk"]},
+{"c":96,"n":"GlenDronach","r":"Highland","closed":false,"a":["GlenDronach"]},
+{"c":97,"n":"Littlemill","r":"Lowland","closed":true,"a":["Littlemill"]},
+{"c":98,"n":"Inverleven","r":"Lowland","closed":true,"a":["Inverleven"]},
+{"c":99,"n":"Glenugie","r":"Highland","closed":true,"a":["Glenugie"]},
+{"c":100,"n":"Strathmill","r":"Speyside","closed":false,"a":["Strathmill"]},
+{"c":101,"n":"Knockando","r":"Speyside","closed":false,"a":["Knockando"]},
+{"c":102,"n":"Dalwhinnie","r":"Highland","closed":false,"a":["Dalwhinnie"]},
+{"c":103,"n":"Royal Lochnagar","r":"Highland","closed":false,"a":["Royal Lochnagar"]},
+{"c":104,"n":"Glenburgie (Glencraig)","r":"Speyside","closed":true,"a":["Glenburgie (Glencraig)","Glencraig"]},
+{"c":105,"n":"Tormore","r":"Speyside","closed":false,"a":["Tormore"]},
+{"c":106,"n":"Cardhu","r":"Speyside","closed":false,"a":["Cardhu"]},
+{"c":107,"n":"Glenallachie","r":"Speyside","closed":false,"a":["Glenallachie"]},
+{"c":108,"n":"Allt-a-Bhainne","r":"Speyside","closed":false,"a":["Allt-a-Bhainne","Allt a Bhainne"]},
+{"c":109,"n":"Miltonduff (Mosstowie)","r":"Speyside","closed":true,"a":["Miltonduff (Mosstowie)","Mosstowie"]},
+{"c":110,"n":"Oban","r":"Highland","closed":false,"a":["Oban"]},
+{"c":111,"n":"Lagavulin","r":"Islay","closed":false,"a":["Lagavulin"]},
+{"c":112,"n":"Loch Lomond (Inchmurrin / Inchmoan)","r":"Highland","closed":false,"a":["Loch Lomond (Inchmurrin / Inchmoan)","Loch Lomond","Inchmurrin","Inchmoan"]},
+{"c":113,"n":"Braeval (Braes of Glenlivet)","r":"Speyside","closed":false,"a":["Braeval (Braes of Glenlivet)","Braeval","Braes of Glenlivet"]},
+{"c":114,"n":"Springbank (Longrow)","r":"Campbeltown","closed":false,"a":["Springbank (Longrow)","Longrow"]},
+{"c":115,"n":"Knockdhu (AnCnoc)","r":"Speyside","closed":false,"a":["Knockdhu (AnCnoc)","Knockdhu","AnCnoc"]},
+{"c":116,"n":"Yoichi","r":"Japan","closed":false,"a":["Yoichi"]},
+{"c":119,"n":"Yamazaki","r":"Japan","closed":false,"a":["Yamazaki"]},
+{"c":120,"n":"Hakushu","r":"Japan","closed":false,"a":["Hakushu"]},
+{"c":121,"n":"Isle of Arran","r":"Islands","closed":false,"a":["Isle of Arran","Arran"]},
+{"c":122,"n":"Loch Lomond (Croftengea)","r":"Highland","closed":false,"a":["Loch Lomond (Croftengea)","Loch Lomond","Croftengea"]},
+{"c":123,"n":"Glengoyne","r":"Highland","closed":false,"a":["Glengoyne"]},
+{"c":124,"n":"Miyagikyo","r":"Japan","closed":false,"a":["Miyagikyo","Sendai"]},
+{"c":125,"n":"Glenmorangie","r":"Highland","closed":false,"a":["Glenmorangie"]},
+{"c":126,"n":"Springbank (Hazelburn)","r":"Campbeltown","closed":false,"a":["Springbank (Hazelburn)","Hazelburn"]},
+{"c":127,"n":"Bruichladdich (Port Charlotte)","r":"Islay","closed":false,"a":["Bruichladdich (Port Charlotte)","Port Charlotte"]},
+{"c":129,"n":"Kilchoman","r":"Islay","closed":false,"a":["Kilchoman"]},
+{"c":130,"n":"Chichibu","r":"Japan","closed":false,"a":["Chichibu"]},
+{"c":131,"n":"Hanyu","r":"Japan","closed":true,"a":["Hanyu"]},
+{"c":132,"n":"Karuizawa","r":"Japan","closed":true,"a":["Karuizawa"]},
+{"c":135,"n":"Loch Lomond","r":"Highland","closed":false,"a":["Loch Lomond"]},
+{"c":136,"n":"Eden Mill","r":"Lowland","closed":false,"a":["Eden Mill"]},
+{"c":138,"n":"Nantou","r":"Taiwan","closed":false,"a":["Nantou","Omar"]},
+{"c":139,"n":"Kavalan","r":"Taiwan","closed":false,"a":["Kavalan"]},
+{"c":149,"n":"Ardnamurchan","r":"Highland","closed":false,"a":["Ardnamurchan"]},
+{"c":156,"n":"Glasgow Distillery","r":"Lowland","closed":false,"a":["Glasgow Distillery","Glasgow"]},
+{"c":158,"n":"Yuza Distillery","r":"Japan","closed":false,"a":["Yuza Distillery"]},
+{"c":159,"n":"Mars Shinshu","r":"Japan","closed":false,"a":["Mars Shinshu","Shinshu","Komagatake"]},
+{"c":160,"n":"Mars Tsunuki","r":"Japan","closed":false,"a":["Mars Tsunuki","Tsunuki"]},
+{"c":161,"n":"Nc'nean Distillery","r":"Highland","closed":false,"a":["Nc'nean Distillery","Ncnean"]},
+{"c":162,"n":"Isle of Raasay","r":"Islands","closed":false,"a":["Isle of Raasay","Raasay"]},
+{"c":163,"n":"Isle of Harris Distillery","r":"Islands","closed":false,"a":["Isle of Harris Distillery","Harris","Hearach"]},
+{"c":165,"n":"Wolfburn (peated)","r":"Highland","closed":false,"a":["Wolfburn (peated)","Wolfburn"]},
+{"c":166,"n":"Torabhaig Distillery","r":"Islands","closed":false,"a":["Torabhaig Distillery"]},
+{"c":167,"n":"Clydeside Distillery","r":"Lowland","closed":false,"a":["Clydeside Distillery"]},
+{"c":168,"n":"InchDairnie Distillery (KinGlassie)","r":"Lowland","closed":false,"a":["InchDairnie Distillery (KinGlassie)","InchDairnie Distillery","InchDairnie","KinGlassie"]}];
+
+const N = 10;
+const $ = s => document.querySelector(s);
+const main = $('#main');
+const LS_KEY = 'smws-quiz';
+
+const prefs = load();
+$('#closed').checked = prefs.closed !== false;
+document.querySelector(`#dir input[value="${prefs.dir || 'mix'}"]`).checked = true;
+document.querySelector(`#mode input[value="${prefs.mode || 'rand'}"]`).checked = true;
+if (prefs.from) $('#from').value = prefs.from;
+
+function mode() { return document.querySelector('#mode input:checked').value; }
+function applyMode() {
+  const seq = mode() === 'seq';
+  $('#dir').hidden = seq;
+  $('#fromwrap').hidden = !seq;
+  $('#start').textContent = seq ? '順番に出題' : '10問 出題';
+  showCount();
+}
+
+function load() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch (e) { return {}; } }
+function save() { try { localStorage.setItem(LS_KEY, JSON.stringify(prefs)); } catch (e) {} }
+
+function pool() {
+  const closed = $('#closed').checked;
+  return DATA.filter(d => closed || !d.closed);
+}
+function dir() { return document.querySelector('#dir input:checked').value; }
+
+function norm(s) {
+  return s.normalize('NFKD').toLowerCase()
+    .replace(/\bdistillery\b/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+function codesFor(name) { return DATA.filter(d => d.n === name).map(d => d.c); }
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+function makeQuiz(items) {
+  const d = mode() === 'seq' ? 'n2d' : dir();
+  return items.map(it => ({
+    item: it,
+    type: d === 'mix' ? (Math.random() < .5 ? 'n2d' : 'd2n') : d,
+    input: ''
+  }));
+}
+
+let quiz = null;
+let seqMode = false;
+
+function fromCode() { return Math.max(1, parseInt($('#from').value, 10) || 1); }
+
+function start(items) {
+  seqMode = mode() === 'seq';
+  prefs.closed = $('#closed').checked; prefs.dir = dir(); prefs.mode = mode(); prefs.from = fromCode(); save();
+  let src;
+  if (items) src = seqMode ? items.slice().sort((a, b) => a.c - b.c) : shuffle(items.slice());
+  else if (seqMode) src = pool().filter(d => d.c >= fromCode()).sort((a, b) => a.c - b.c);
+  else src = shuffle(pool().slice()).slice(0, N);
+  if (!src.length) { main.innerHTML = '<div class="empty">出題できる蒸留所がありません</div>'; return; }
+  quiz = makeQuiz(src);
+  render();
+}
+
+function render() {
+  main.innerHTML = '';
+  const grid = document.createElement('div'); grid.className = 'grid';
+  quiz.forEach((q, i) => {
+    const card = document.createElement('div'); card.className = 'card'; card.style.animationDelay = (Math.min(i, 20) * 45) + "ms";
+    const isNum = q.type === 'n2d';
+    card.innerHTML = `
+      <div class="idx">Q ${String(i + 1).padStart(2, '0')}</div>
+      <div class="prompt ${isNum ? 'num' : 'name'}">${isNum ? q.item.c + '<small>.</small>' : q.item.n}</div>
+      <div class="ask">${isNum ? '蒸留所名は？' : 'コード番号は？'}</div>
+      <input type="${isNum ? 'text' : 'number'}" ${isNum ? 'autocomplete="off" autocapitalize="off" spellcheck="false"' : 'inputmode="numeric" min="1"'}
+             placeholder="${isNum ? 'distillery' : '##'}" data-i="${i}">`;
+    grid.appendChild(card);
+  });
+  main.appendChild(grid);
+
+  let bar = null;
+  if (seqMode) {
+    bar = document.createElement('div'); bar.className = 'bar';
+    bar.innerHTML = `<div class="prog"><b id="filled">0</b> / ${quiz.length} 入力済み<div class="track"><i id="track"></i></div></div>
+      <div><button id="check">答え合わせ</button></div>`;
+    main.appendChild(bar);
+  } else {
+    const actions = document.createElement('div'); actions.className = 'actions';
+    actions.innerHTML = `<button id="check">答え合わせ</button><button class="ghost" id="reroll">別の10問</button>`;
+    main.appendChild(actions);
+    $('#reroll').onclick = () => start();
+  }
+
+  const inputs = [...main.querySelectorAll('.card input')];
+  const updateProg = () => {
+    if (!bar) return;
+    const n = quiz.filter(q => q.input.trim()).length;
+    $('#filled').textContent = n;
+    $('#track').style.width = (n / quiz.length * 100) + '%';
+  };
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', () => { quiz[i].input = inp.value; updateProg(); });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); if (i + 1 < inputs.length) inputs[i + 1].focus(); else check(); }
+    });
+  });
+  inputs[0].focus();
+  $('#check').onclick = check;
+  window.scrollTo({ top: 0 });
+}
+
+function grade(q) {
+  const v = q.input.trim();
+  if (q.type === 'n2d') return v !== '' && q.item.a.some(a => norm(a) === norm(v));
+  return codesFor(q.item.n).includes(parseInt(v, 10));
+}
+
+function check() {
+  const results = quiz.map(q => ({ q, ok: grade(q) }));
+  const score = results.filter(r => r.ok).length;
+  recordHistory(score, results.length);
+
+  main.innerHTML = '';
+  const sc = document.createElement('div'); sc.className = 'score';
+  const msg = score === results.length ? 'Slàinte!' : score >= results.length * .7 ? 'いい感じ' : 'もう一杯';
+  sc.innerHTML = `<span class="big">${score}</span><span class="of">/ ${results.length}</span><span class="msg">${msg}</span>`;
+  main.appendChild(sc);
+
+  const grid = document.createElement('div'); grid.className = 'grid';
+  results.forEach(({ q, ok }, i) => {
+    const card = document.createElement('div'); card.className = 'card ' + (ok ? 'ok' : 'ng'); card.style.animationDelay = (Math.min(i, 20) * 40) + "ms";
+    const isNum = q.type === 'n2d';
+    const answer = isNum ? q.item.n : codesFor(q.item.n).join(' / ');
+    const yours = q.input.trim() || '—';
+    card.innerHTML = `
+      <div class="idx">Q ${String(i + 1).padStart(2, '0')} · ${ok ? 'CORRECT' : 'MISS'}</div>
+      <div class="prompt ${isNum ? 'num' : 'name'}">${isNum ? q.item.c + '<small>.</small>' : q.item.n}</div>
+      <div class="verdict">
+        <span class="answer ${isNum ? '' : 'code'}">${isNum ? answer : answer}</span>
+        <span class="yours ${ok ? 'ok' : ''}">${escapeHtml(yours)}</span>
+      </div>
+      <div class="meta"><span>${q.item.r}</span>${q.item.closed ? '<span class="stamp">CLOSED</span>' : ''}</div>`;
+    grid.appendChild(card);
+  });
+  main.appendChild(grid);
+
+  const misses = results.filter(r => !r.ok).map(r => r.q.item);
+  const actions = document.createElement('div'); actions.className = 'actions';
+  actions.innerHTML = `<button id="again">${seqMode ? 'もう一度（最初から）' : 'もう一度（新しい10問）'}</button>` +
+    (misses.length ? `<button class="ghost" id="retry">間違えた ${misses.length} 問だけ</button>` : '');
+  main.appendChild(actions);
+  $('#again').onclick = () => start();
+  if (misses.length) $('#retry').onclick = () => start(misses);
+  window.scrollTo({ top: 0 });
+}
+
+function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+function recordHistory(score, total) {
+  prefs.plays = (prefs.plays || 0) + 1;
+  prefs.correct = (prefs.correct || 0) + score;
+  prefs.answered = (prefs.answered || 0) + total;
+  save(); showStats();
+}
+function showStats() {
+  const el = $('#stats');
+  if (!prefs.plays) { el.textContent = ''; return; }
+  el.textContent = `${prefs.plays} rounds · ${Math.round(prefs.correct / prefs.answered * 100)}% correct`;
+}
+function showCount() {
+  const p = mode() === 'seq' ? pool().filter(d => d.c >= fromCode()) : pool();
+  $('#count').textContent = `${p.length} distilleries`;
+}
+
+$('#start').onclick = () => start();
+$('#closed').addEventListener('change', showCount);
+$('#from').addEventListener('input', showCount);
+$('#mode').addEventListener('change', applyMode);
+applyMode(); showStats();
+</script>
+</body>
+</html>
